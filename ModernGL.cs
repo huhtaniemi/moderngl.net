@@ -528,6 +528,10 @@ namespace ModernGL
                         length *= sizeof(byte);
                         GL.BufferData(BufferTarget.ArrayBuffer, length, byteData, DrawType);
                         break;
+                    case ushort[] ushortData:
+                        length *= sizeof(ushort);
+                        GL.BufferData(BufferTarget.ArrayBuffer, length, ushortData, DrawType);
+                        break;
                     case int[] integerData:
                         length *= sizeof(int);
                         GL.BufferData(BufferTarget.ArrayBuffer, length, integerData, DrawType);
