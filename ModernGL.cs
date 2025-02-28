@@ -190,6 +190,7 @@ namespace ModernGL
                         var key = GL.GetActiveAttrib(id, i, out int size, out ActiveAttribType type);
                         var location = GL.GetAttribLocation(id, key);
                         _attributes[key] = new(i, location, size, type);
+                        moderngl.DebugOut($"program {id} attribute '{key}' - location {location} type {type} size {type} " + "error:" + GL.GetError());
                     }
                     GL.GetProgram(id, GetProgramParameterName.ActiveUniforms, out var uniformsCount);
                     for (var i = 0; i < uniformsCount; i++)
@@ -197,6 +198,7 @@ namespace ModernGL
                         var key = GL.GetActiveUniform(id, i, out int size, out ActiveUniformType type);
                         var location = GL.GetUniformLocation(id, key);
                         _uniforms[key] = new(i, location, size, type);
+                        moderngl.DebugOut($"program {id} uniform '{key}' - location {location} type {type} size {type} " + "error:" + GL.GetError());
                     }
                 }
                 finally
@@ -248,11 +250,12 @@ namespace ModernGL
                         default:
                             throw new NotSupportedException($"Type '{value.GetType()}' not supported.");
                     }
+                    //moderngl.DebugOut($"uniform set: '{key}' location {info.location} type: {info.type} value {value} " + "error:" + GL.GetError());
                 }
                 get
                 {
                     var info = _uniforms[key];
-                    //Console.WriteLine($"Uniform '{key}' size: {info.size}, type: {info.type}");
+                    //moderngl.DebugOut($"Uniform '{key}' size: {info.size}, type: {info.type}");
                     switch (info.type)
                     {
                         case ActiveUniformType.Int:
@@ -551,7 +554,7 @@ namespace ModernGL
                     default:
                         throw new NotSupportedException($"Type '{data.GetType()}' not supported.");
                 }
-                Console.WriteLine($"buffer id {id} length {length} type '{data.GetType()}' error:" + GL.GetError());
+                moderngl.DebugOut($"buffer id {id} length {length} type '{data.GetType()}' error:" + GL.GetError());
             }
             public Buffer(int reserve = 0, bool dynamic = false) : this()
             {
@@ -608,6 +611,7 @@ namespace ModernGL
             private void bind_content((Buffer vbo, string vbo_format, string[] attrs) content, bool skip_errors)
             {
                 var vbo_tokens = new Buffer.BufferFormat(content.vbo_format, content.attrs);
+                moderngl.DebugOut($"vertex_array id {id} [vbo {content.vbo.id} fmt '{content.vbo_format}' '{string.Join(" ", content.attrs)}']");
 
                 this.num_vertices = content.vbo.length / vbo_tokens.stride;
                 this.num_instances = 1;
@@ -619,12 +623,13 @@ namespace ModernGL
                 {
                     if (token.type == Buffer.BufferFormat.ElementToken.ElementType.x)
                     {
-                        Console.WriteLine($"padding bytes vbo {content.vbo.id} token '{token}' stride {vbo_tokens.stride} offset {offset}  ");
+                        moderngl.ErrorOut($"padding bytes vbo {content.vbo.id} token '{token}' stride {vbo_tokens.stride} offset {offset}  ");
                         offset += token.bytes;
                         continue;
                     }
                     if (!program._attributes.ContainsKey(token.attr))
                     {
+                        moderngl.DebugOut($"attrib-ptr '{token.attr}' location -- not found in program");
                         offset += token.bytes;
                         if (!skip_errors)
                             throw new ArgumentException($"attribute {token.attr} not found in shader program.");
@@ -632,6 +637,8 @@ namespace ModernGL
                     }
 
                     var attr = program._attributes[token.attr];
+                    moderngl.DebugOut($"attrib-ptr '{token.attr}' location {attr.location} ");
+                    moderngl.DebugOut($"size {attr.size} type '{attr.type}'  vbo {content.vbo.id} token '{token}' stride {vbo_tokens.stride} offset {offset}  " );
                     if (attr.IsFloat)
                     {
                         GL.VertexAttribPointer(attr.location, token.count, token.ptype, token.normalized, vbo_tokens.stride, offset);
@@ -646,7 +653,7 @@ namespace ModernGL
                     }
                     else throw new NotSupportedException($"attrib ype '{attr.type}' not supported.");
 
-                    Console.WriteLine("error:" + GL.GetError());
+                    moderngl.DebugOut("error:" + GL.GetError());
 
                     GL.VertexAttribDivisor(attr.location, vbo_tokens.divisor);
                     GL.EnableVertexAttribArray(attr.location);
@@ -765,6 +772,7 @@ namespace ModernGL
                     default:
                         throw new NotSupportedException($"glTexImage .. '{texture_target}' not supported.");
                 }
+                moderngl.DebugOut($"TexImage.. '{texture_target}' error:" + GL.GetError());
 
                 if (this.samples == 0)
                 {
@@ -781,16 +789,18 @@ namespace ModernGL
 
                 if (_base > max_level)
                 {
-                    Console.WriteLine($"invalid base {_base} > max_level {max_level}");
+                    moderngl.ErrorOut($"invalid base {_base} > max_level {max_level}");
                     return;
                 }
                 GL.TexParameter(this.texture_target, TextureParameterName.TextureBaseLevel, _base);
                 GL.TexParameter(this.texture_target, TextureParameterName.TextureMaxLevel, (this.max_level = max_level));
+                moderngl.DebugOut("TextureMaxLevel error:" + GL.GetError());
 
                 // Mipmaps are smaller copies of the texture, scaled down. Each mipmap level is half the size of the previous one
                 // Generated mipmaps go all the way down to just one pixel.
                 // OpenGL will automatically switch between mipmaps when an object gets sufficiently far away.
                 GL.GenerateMipmap((GenerateMipmapTarget)this.texture_target);
+                moderngl.DebugOut("GenerateMipmap error:" + GL.GetError());
 
                 //  not necessary?
                 //filter = (fTypes.LINEAR_MIPMAP_LINEAR, fTypes.LINEAR);
@@ -827,6 +837,7 @@ namespace ModernGL
                     var (min_filter, mag_filter) = (_filter = value);
                     GL.TexParameter(this.texture_target, TextureParameterName.TextureMinFilter, (int)min_filter);
                     GL.TexParameter(this.texture_target, TextureParameterName.TextureMagFilter, (int)mag_filter);
+                    moderngl.DebugOut("TextureMagFilter error:" + GL.GetError());
                 }
             }
 
@@ -840,6 +851,7 @@ namespace ModernGL
                     GL.BindTexture(this.texture_target, this.id);
                     GL.TexParameter(this.texture_target, TextureParameterName.TextureWrapS,
                         (_repeat_x = value) ? (int)TextureWrapMode.Repeat : (int)TextureWrapMode.ClampToEdge);
+                    moderngl.DebugOut("TextureWrapS error:" + GL.GetError());
                 }
             }
 
@@ -853,6 +865,7 @@ namespace ModernGL
                     GL.BindTexture(this.texture_target, this.id);
                     GL.TexParameter(this.texture_target, TextureParameterName.TextureWrapT,
                         (_repeat_y = value) ? (int)TextureWrapMode.Repeat : (int)TextureWrapMode.ClampToEdge);
+                    moderngl.DebugOut("TextureWrapT error:" + GL.GetError());
                 }
             }
 
@@ -866,7 +879,7 @@ namespace ModernGL
 
                     GL.BindTexture(this.texture_target, this.id);
                     GL.TexParameter(this.texture_target, TextureParameterName.TextureMaxAnisotropy, _anisotropy = value);
-                    Console.WriteLine("TextureMaxAnisotropy error:" + GL.GetError());
+                    moderngl.DebugOut("TextureMaxAnisotropy error:" + GL.GetError());
                 }
             }
         }
@@ -968,6 +981,17 @@ namespace ModernGL
             }
             return instance;
         }
+        internal static void DebugOut(string fmt, params object[] args)
+        {
+#if (DEBUG)
+            Console.WriteLine(fmt, args);
+#endif
+        }
+        internal static void ErrorOut(string fmt, params object[] args)
+        {
+            Console.WriteLine(fmt, args);
+        }
+
         private static void DebugCallback(DebugSource source, DebugType type, int id, DebugSeverity severity, int length, IntPtr message, IntPtr userParam)
         {
             var messageString = System.Runtime.InteropServices.Marshal.PtrToStringAnsi(message, length);
