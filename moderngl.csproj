@@ -4,10 +4,13 @@
     <TargetFramework>net8.0</TargetFramework>
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
-    <Version>0.1.0</Version>
+    <ProjectName>moderngl.net</ProjectName>
+    <PackageId>moderngl.net</PackageId>
+    <Version>0.1.2</Version>
     <Authors>Artur Huhtaniemi</Authors>
     <Company></Company>
     <Description>Porting of ModerGL module to C#, as a wrapper for OpenTK</Description>
+    <RepositoryUrl>https://github.com/huhtaniemi/moderngl.net</RepositoryUrl>
     <PackageLicenseExpression>MIT</PackageLicenseExpression>
   </PropertyGroup>
 
