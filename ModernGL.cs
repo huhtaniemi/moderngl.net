@@ -815,7 +815,7 @@ namespace ModernGL
             public (fTypes, fTypes) filter
             {
                 get => _filter;
-                internal set
+                set
                 {
                     GL.ActiveTexture(TextureUnit.Texture0 + default_texture_unit);
                     GL.BindTexture(this.texture_target, this.id);
@@ -830,7 +830,7 @@ namespace ModernGL
             public bool repeat_x
             {
                 get => _repeat_x;
-                internal set
+                set
                 {
                     GL.ActiveTexture(TextureUnit.Texture0 + default_texture_unit);
                     GL.BindTexture(this.texture_target, this.id);
@@ -843,7 +843,7 @@ namespace ModernGL
             public bool repeat_y
             {
                 get => _repeat_y;
-                internal set
+                set
                 {
                     GL.ActiveTexture(TextureUnit.Texture0 + default_texture_unit);
                     GL.BindTexture(this.texture_target, this.id);
@@ -856,7 +856,7 @@ namespace ModernGL
             public float anisotropy
             {
                 get => _anisotropy;
-                internal set
+                set
                 {
                     GL.ActiveTexture(TextureUnit.Texture0 + default_texture_unit);
 
@@ -941,7 +941,7 @@ namespace ModernGL
                 GL.Enable(EnableCap.Blend);
         }
 
-        internal void set_clearcolor(System.Drawing.Color color)
+        public void set_clearcolor(System.Drawing.Color color)
         {
             GL.ClearColor(color);// Color4.CornflowerBlue);
         }
