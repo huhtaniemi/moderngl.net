@@ -102,6 +102,8 @@ namespace ModernGL
 
             }
 
+            public readonly glContext ctx;
+
             internal readonly int id;
 
             internal record struct AttributesInfo
@@ -172,10 +174,10 @@ namespace ModernGL
             }
             internal readonly Dictionary<string, UniformInfo> _uniforms = [];
 
-            public Program() =>
-                this.id = GL.CreateProgram();
+            public Program(glContext ctx) =>
+                (this.ctx, this.id) = (ctx, GL.CreateProgram());
 
-            public Program(List<Shader> shaders) : this()
+            public Program(glContext ctx, List<Shader> shaders) : this(ctx)
             {
                 try
                 {
@@ -292,7 +294,7 @@ namespace ModernGL
 
         public Program program(string vertex_shader, string fragment_shader)
         {
-            return new Program([
+            return new Program(this,[
                 new(ShaderType.VertexShader, vertex_shader),
                 new(ShaderType.FragmentShader, fragment_shader)
             ]);
